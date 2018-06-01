@@ -6,6 +6,7 @@ const URL = require('url');
 const request = require("request");
 const moment = require("moment");
 const bot = new Discord.Client({ autoReconnect: true });
+const fs = require("fs");
 
 //#region Language config
 let lang = this.lang;
@@ -112,6 +113,38 @@ var YouTubeThumbnail //Défini la miniature
 	, YouTubeLink; //Défini le lien de la vidéo
 
 //var CommandList = ["restart", "leave", "join", "", ""];
+
+bot.commands = new Discord.Collection();
+bot.disabledCommands = [];
+
+function checkCommand(command, name) {
+	var resultOfCheck = [true, null];
+	if (!command.run) resultOfCheck[0] = false; resultOfCheck[1] = `Missing Function: "module.run" of ${name}.`;
+	if (!command.help) resultOfCheck[0] = false; resultOfCheck[1] = `Missing Object: "module.help" of ${name}.`;
+	if (command.help && !command.help.name) resultOfCheck[0] = false; resultOfCheck[1] = `Missing String: "module.help.name" of ${name}.`;
+	return resultOfCheck;
+}
+
+fs.readdir("./commands/", (err, files) => {
+	if (err) console.log(err);
+	var jsfiles = files.filter(f => f.endsWith("js"));
+	if (jsfiles.length <= 0) return console.log("Couldn't find commands.");
+	jsfiles.forEach((f, i) => {
+		try {
+			var props = require(`./commands/${f}`);
+			bot.commands.set(props.id, props);
+			if (checkCommand(props, f)[0]) {
+				bot.commands.set(props.help.name, props);
+			} else {
+				throw checkCommand(props, f)[1];
+			}
+		} catch(err) {
+			bot.disableCommands.push(f);
+			console.log(`\nThe ${f} command failed to load:`);
+			console.log(err);
+		}
+	});
+});
 
 bot.on('ready', () => { //When bot is ready
 	setInterval(() => {
