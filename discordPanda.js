@@ -146,17 +146,23 @@ fs.readdir("./commands/", (err, files) => {
 	});
 });
 
+bot.loaders = { enabledLoaders: [], disabledLoaders: [] };
+
+fs.readdirSync(__dirname + "/load").forEach(file => {
+	try {
+		let loader = require("./load/" + file);
+		bot.loaders.enabledLoaders.push(loader);
+	} catch(err) {
+		bot.loaders.disabledLoaders.push(file);
+		console.log(`\nThe ${file} load module failed to load:`);
+		console.log(err);
+	}
+});
+
 bot.on('ready', () => { //When bot is ready
-	setInterval(() => {
-		try {
-			dbl.postStats(bot.guilds.size);
-			console.log("postStats is Done");
-		} catch (error) {
-			console.log("postStats error: " + error);
-		}
-
-	}, 1800000); //30 min
-
+	bot.loaders.enabledLoaders.forEach((loader) => {
+		if (loader.run != null) loader.run(bot);
+	});
 
 	setInterval(datenow, 1000);
 	bot.user.setStatus("online")
