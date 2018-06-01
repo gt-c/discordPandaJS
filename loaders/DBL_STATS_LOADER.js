@@ -1,5 +1,5 @@
 module.exports.run = function(client) {
-  setInterval(() => {
+	setInterval(() => {
 		try {
 			dbl.postStats(bot.guilds.size);
 			console.log("postStats is Done");
@@ -7,5 +7,5 @@ module.exports.run = function(client) {
 			console.log("postStats error: " + error);
 		}
 	}, 1800000);
-  //30 min
+	//30 min
 };
